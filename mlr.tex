@@ -1,0 +1,238 @@
+ % !TEX TS-program = xelatexmk
+ \documentclass[UTF8,10pt, twoside]{article} 
+ \usepackage{ctexcap}   %中文支持 
+ %页面纸张设置
+ \usepackage{geometry}
+ \geometry{a4paper, papersize={210mm,297mm}, scale=0.8} %A4
+ \geometry{left=2cm,right=2cm,top=2cm,bottom=2cm}
+ 
+ % 设置中文段落首行缩进 
+ \usepackage{indentfirst}
+ \setlength{\parindent}{2em }  
+ % 设置行间距
+ \renewcommand{\baselinestretch }{1.2}
+ %设置段落间距
+ \addtolength{\parskip}{.4em}
+ 
+ 
+ %标题居左
+ \usepackage{titlesec}    
+ \titleformat{\section}{\LARGE\bfseries}{\thesection}{1em}{}
+ 
+ 
+ %直立积分号
+ \usepackage{amsmath,amssymb}
+ \DeclareSymbolFont{EulerExtension}{U}{euex}{m}{n}
+ \DeclareMathSymbol{\euintop}{\mathop} {EulerExtension}{"52}
+ \DeclareMathSymbol{\euointop}{\mathop} {EulerExtension}{"48}
+ \let\intop\euintop
+ \let\ointop\euointop
+ 
+ \usepackage{bm}
+ 
+ \usepackage[vlined,ruled]{algorithm2e}
+ 
+ \begin{titlepage}
+ 	\title{混合逻辑回归简介}
+ 	\author{宫庆义\\gongqingyi@qq.com} 
+ 	\date{\today}
+ \end{titlepage}
+ 
+ \begin{document} 
+ 	\pagestyle{empty}
+ 	\maketitle                         %生成标题  
+ 	\thispagestyle{empty}
+ 	\newpage
+   
+\section{简介}
+混合逻辑回归(Mixture of Logistic Regression)是一种适用于大规模数据的非线性模型学习方法。其做法是，将样本所在的特征空间划分为多个区域，每个区域中使用一个单独的广义线性函数作为输出。在整体上看，混合逻辑回归构建了一个分片线性模型，如果区域数足够多，其能逼近任意复杂的非线性函数。
+\section{回归模型}
+假设样本特征向量为\(\bm{x}\)，点击事件为\(y\)，\(y=1\)表示点击，\(y=0\)表示不点击，划分区域数为\(m\)，混合逻辑回归的模型为:
+\begin{equation}
+z=p(y|\bm{x}) = \sum_{k=1}^{m}\left(\frac{1}{1+e^{-\bm{w}_k\bm{x}}}\cdot\frac{e^{\bm{\mu}_k\bm{x}}}{\sum\limits_{j=1}^{m}e^{\bm{\mu}_j\bm{x}}}\right)
+\end{equation}
+参数矩阵\(\Theta_{f \times 2m}\)：
+\begin{equation}
+\Theta=\left(\bm{w_1}, \bm{w_2},\ldots ,\bm{w_m}, 0, \bm{\mu_2},\bm{\mu_3},\ldots,\bm{\mu_m}\right)
+\end{equation}
+其中：
+\begin{equation}
+\bm{w}_k = \left( \begin{array}{c}  w_{1k}\cr w_{2k}\cr w_{3k}\cr\vdots\cr w_{f, k} \end{array}\right),
+\bm{\mu}_k =\left( \begin{array}{c} 
+ \mu_{1k}\cr\mu_{2k}\cr\mu_{3k}\cr\vdots\cr\mu_{f,k} \end{array}\right), \quad
+k=1,2,\ldots,m 
+\end{equation}
+\section{似然函数}
+假设\(a\)为样本\(\bm{x}_n\)被点击的次数，\(b\)为样本\(\bm{x}_n\)没被点击的次数，\(N\)为总的样本数，则似然函数为：
+\begin{equation}
+ \begin{aligned}   
+	L&=\prod_{n=1}^{N}\Big[p(y_n=1|\bm{x}_n)\Big]^a
+	\Big[1-p(y_n=1|\bm{x}_n)\Big]^b \\
+	-\ln L&=-\sum_{n=1}^N\Big[ a\ln p(y_n=1|\bm{x}_n)+b\ln\big[1-p(y_n=1|\bm{x}_n)\big]\Big]\\
+	&=-\sum_{n=1}^N\Big[ a\ln z_n + b\ln(1-z_n)\Big]
+ \end{aligned}
+\end{equation}
+
+\section{目标函数}
+\begin{equation} 
+\min\limits_{\Theta}J=-\ln L + \beta \|\Theta\|_{1} + \lambda  \|\Theta\|_{2,1} + \gamma \|\Theta\|_{g}  
+\end{equation}
+\begin{equation}
+ \|\Theta\|_{1} = \sum_{i=1}^{f} \left(\sum_{j=1}^{m} |w_{ij}| +  \sum_{j=2}^{m} |\mu_{ij}| \right)  
+\end{equation} 
+\begin{equation} 
+\|\Theta\|_{2,1} = \sum_{i=1}^{f} \sqrt{\sum_{j=1}^{m} w_{ij}^2 +  \sum_{j=2}^{m} \mu_{ij}^2  } 
+\end{equation}
+\begin{equation} 
+  \|\Theta\|_{g} = \sum_{g=1}^{G} \sqrt{ \sum_{i\in\Omega_g}\left(\sum_{j=1}^{m} w_{ij}^2 +  \sum_{j=2}^{m} \mu_{ij}^2\right) } 
+ \end{equation} 
+
+\section{似然函数负对数的偏导数}
+\begin{equation} 
+\begin{aligned}   
+	\frac{-\partial\ln L}{\partial \Theta}&=-\sum_{n=1}^N\Big[a\cdot\frac{1}{z_n}\cdot\frac{\partial z_n}{\partial \Theta} - b\cdot\frac{1}{1-z_n} \cdot\frac{\partial z_n}{\partial \Theta}\Big] \\
+	&=\sum_{n=1}^N\frac{(a+b)z_n-a}{z_n(1-z_n)}\cdot\frac{\partial z_n}{\partial \Theta}
+\end{aligned}
+\end{equation}
+
+模型的偏导数:
+\begin{equation} 
+\begin{aligned}   
+	\frac{\partial z}{\partial \bm{w}_k} &= \bm{\sigma}_k(1-\bm{\sigma}_k)\bm{\pi}_k \bm{x} \\
+	\frac{\partial z}{\partial \bm{\mu}_k} &= (\bm{\sigma}_k -z)\bm{\pi}_k \bm{x}
+\end{aligned}
+\end{equation}
+
+其中:
+\begin{equation} 
+\begin{aligned}    
+	\bm{\sigma}_k&=\frac{1}{1+e^{  \bm{-w}_k \bm{x}}}\\
+	\bm{\pi}_k&=\frac{e^{\bm{\mu}_k\bm{x}}}{\sum\limits_{j=1}^m e^{\bm{\mu}_j\bm{x}}}
+\end{aligned}
+\end{equation} 
+
+综上:
+\begin{equation} 
+\begin{aligned}   
+	\frac{-\partial\ln L}{\partial \bm{w}_k}&=\sum_{n=1}^N\frac{(a+b)z_n-a}{z_n(1-z_n)}
+	\bm{\sigma}_k(1-\bm{\sigma}_k)\bm{\pi}_k \bm{x}_n \\
+	\frac{-\partial\ln L}{\partial \bm{\mu}_k} &=\sum_{n=1}^N\frac{(a+b)z_n-a}{z_n(1-z_n)} 
+	(\bm{\sigma}_k -z_n)\bm{\pi}_k \bm{x}_n
+\end{aligned}
+\end{equation} 
+\newline
+\section{正则项的偏导数}
+由于正则项非光滑,偏导数有不存在的情况,应用次梯度法,处理正则项的偏导数如下:
+\subsection{L1正则偏导}
+\begin{equation} 
+\frac{\partial \beta\|\Theta\|_{1}}{\partial w_{ij}} = 
+\begin{cases}
+	\begin{aligned} 
+		\beta \qquad  w_{ij} &> 0  \cr 
+		-\beta \qquad  w_{ij} &< 0  \cr 
+		\beta \qquad  w_{ij} &= 0, \quad \frac{-\partial \ln L}{\partial w_{ij}}<-\beta\cr 
+		-\beta \qquad  w_{ij} &= 0, \quad \frac{-\partial \ln L}{\partial w_{ij}}>\beta \cr
+		0 \qquad       w_{ij} &= 0, \quad -\beta\leqslant\frac{-\partial \ln L}{\partial w_{ij}}\leqslant\beta
+	\end{aligned}
+\end{cases}
+\end{equation}
+
+\begin{equation} 
+\frac{\partial \beta\|\Theta\|_{1}}{\partial \mu_{ij}} = 
+\begin{cases}
+\begin{aligned} 
+			\beta \qquad  \mu_{ij} &> 0  \cr 
+			-\beta \qquad  \mu_{ij} &< 0  \cr 
+			\beta \qquad  \mu_{ij} &= 0, \quad \frac{-\partial \ln L}{\partial \mu_{ij}}<-\beta\cr 
+			-\beta \qquad  \mu_{ij} &= 0, \quad \frac{-\partial \ln L}{\partial \mu_{ij}}>\beta\cr
+			0 \qquad       \mu_{ij} &= 0, \quad -\beta\leqslant\frac{-\partial \ln L}{\partial \mu_{ij}}\leqslant\beta
+	 
+	\end{aligned}
+\end{cases}
+\end{equation}
+	
+	
+\subsection{L2,1正则偏导} 
+\begin{equation} 
+\begin{aligned} 
+			\|grad_i\| &= \sqrt{ 
+				\sum\limits_{j=1}^{m} \left(\frac{-\partial \ln L}{\partial w_{ij}}\right)^2 +  \sum\limits_{j=2}^{m} \left(\frac{-\partial \ln L}{\partial \mu_{ij}}\right)^2 }, 
+			\\
+			\|\Theta_i\| &= \sqrt{ \sum\limits_{j=1}^{m} w_{ij}^2 +  \sum\limits_{j=2}^{m} \mu_{ij}^2 }
+			\qquad i=1,2,\ldots,f
+\end{aligned} 
+\end{equation}
+
+
+\begin{equation} 
+\frac{\partial \lambda\|\Theta\|_{2,1}}{\partial w_{ij}} = 
+\begin{cases}
+\begin{aligned} 
+				\frac{\lambda w_{ij}}{\|\Theta_i\|} \qquad\qquad\qquad\quad   \|\Theta_i\| &\ne 0  \cr 
+				\frac{-\lambda}{\|grad_i\|}\left(\frac{-\partial \ln L}{\partial w_{ij}}\right) \qquad  \|\Theta_i\| &= 0,\quad\|grad_i\|>\lambda\cr  
+				0 \qquad\qquad\qquad\qquad\quad  \|\Theta_i\| &= 0,\quad\|grad_i\|\leqslant\lambda\cr 
+\end{aligned}
+\end{cases}
+\end{equation}
+			
+			
+\begin{equation} 
+\frac{\partial \lambda\|\Theta\|_{2,1}}{\partial \mu_{ij}} = 
+\begin{cases}
+\begin{aligned} 
+					\frac{\lambda \mu_{ij}}{\|\Theta_i\|} \qquad\qquad\qquad\quad   \|\Theta_i\| &\ne 0  \cr 
+					\frac{-\lambda}{\|grad_i\|}\left(\frac{-\partial \ln L}{\partial \mu_{ij}}\right) \qquad  \|\Theta_i\| &= 0,\quad\|grad_i\|>\lambda\cr  
+					0 \qquad\qquad\qquad\qquad\quad  \|\Theta_i\| &= 0,\quad\|grad_i\|\leqslant\lambda\cr 
+\end{aligned}
+\end{cases}
+\end{equation}
+				
+				
+\subsection{结构化正则偏导}
+\begin{equation} 
+\begin{aligned} 
+					\|grad_g\| &= \sqrt{ \sum_{i\in\Omega_g}\left[
+						\sum\limits_{j=1}^{m} \left(\frac{-\partial \ln L}{\partial w_{ij}}\right)^2 +  \sum\limits_{j=2}^{m} \left(\frac{-\partial \ln L}{\partial \mu_{ij}}\right)^2  \right]}, 
+					\\
+					\|\Theta_g\| &= \sqrt{\sum_{i\in\Omega_g}\left( \sum\limits_{j=1}^{m} w_{ij}^2 +  \sum\limits_{j=2}^{m} \mu_{ij}^2 \right)}
+					\qquad g=1,2,\ldots,G, \quad  \bigcup\limits_g \Omega_g = \left\{1,2,\ldots,f\right\}  
+\end{aligned} 
+\end{equation}
+				
+\begin{equation} 
+\frac{\partial \gamma\|\Theta\|_g}{\partial w_{ij}} = 
+\begin{cases}
+\begin{aligned} 
+						\frac{\gamma w_{ij}}{\|\Theta_g\|} \qquad\qquad\qquad\quad   \|\Theta_g\| &\ne 0  \cr 
+						\frac{-\gamma}{\|grad_g\|}\left(\frac{-\partial \ln L}{\partial w_{ij}}\right) \qquad  \|\Theta_g\| &= 0,\quad\|grad_g\|>\gamma\cr  
+						0 \qquad\qquad\qquad\qquad\quad  \|\Theta_g\| &= 0,\quad\|grad_g\|\leqslant\gamma\cr 
+\end{aligned}
+\end{cases}
+\end{equation}
+				
+\begin{equation} 
+\frac{\partial \gamma\|\Theta\|_g}{\partial \mu_{ij}} = 
+\begin{cases}
+\begin{aligned} 
+							\frac{\gamma \mu_{ij}}{\|\Theta_g\|} \qquad\qquad\qquad\quad   \|\Theta_g\| &\ne 0  \cr 
+							\frac{-\gamma}{\|grad_g\|}\left(\frac{-\partial \ln L}{\partial \mu_{ij}}\right) \qquad  \|\Theta_g\| &= 0,\quad\|grad_g\|>\gamma\cr  
+							0 \qquad\qquad\qquad\qquad\quad  \|\Theta_g\| &= 0,\quad\|grad_g\|\leqslant\gamma\cr 
+\end{aligned}
+\end{cases}
+\end{equation} 
+
+
+\section{拟牛顿法求解}
+\subsection{LBFGS}
+\subsection{LinSearch}
+\subsection{算法流程}
+
+\section{大规模并行化实现}
+\subsection{数据格式}
+\subsection{内存结构}
+\subsection{模型、梯度分布式}
+\subsection{特征压缩}
+\subsection{进程间通信}
+
+ 
+\end{document}

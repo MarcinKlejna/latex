@@ -1,0 +1,39 @@
+\input{style}
+%把指定的章节包含进来，用于分段编译，调试，这里的参数是列表
+\includeonly{ch1}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\begin{titlepage}
+    \title{\LaTeX{}编辑参考}
+    \author{宫庆义\\gongqingyi@qq.com} 
+    \date{\today}
+\end{titlepage}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document} 
+\frontmatter  
+\pagestyle{empty}
+\maketitle                         %生成标题  
+\setcounter{page}{1}        %页码从1开始
+\tableofcontents               %生成目录  
+\pagestyle{fancy}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newpage
+%\setcounter{page}{1}        %页码从1开始
+%\setcounter{chapter}{1}    %章节从1开始
+\mainmatter                         %页码，章节都从1开始
+%第一章包含进来 
+\include{ch1} 
+
+
+%以下是附录
+\appendix 
+\titleformat{\chapter}{\centering\Huge\bfseries}{\chaptername}{1em}{}
+\renewcommand{\chaptername}{附录~\thechapter~}
+\chapter{数学公式参考}
+\chapter{习题答案}
+
+%文献管理工具 JebRef 
+%\cite{xxx}  %引用参考文献
+
+\end{document}

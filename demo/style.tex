@@ -1,0 +1,123 @@
+\documentclass[UTF8,10pt, twoside]{book}
+\usepackage{ctexcap}   %中文支持 
+%页面纸张设置
+\usepackage{geometry}
+\geometry{a4paper, papersize={210mm,297mm}, scale=0.8} %A4
+\geometry{left=2cm,right=2cm,top=2cm,bottom=2cm}
+
+% 设置中文段落首行缩进 
+\usepackage{indentfirst}
+\setlength{\parindent}{2em }  
+% 设置行间距
+\renewcommand{\baselinestretch }{1.2}
+%设置段落间距
+\addtolength{\parskip}{.4em}
+
+%章节样式
+\usepackage{titlesec}    
+\titleformat{\chapter}{\centering\Huge\bfseries}{\chaptername}{1em}{}
+\renewcommand{\chaptername}{第~\thechapter~章}
+\titleformat{\section}{\LARGE\bfseries}{\thesection}{1em}{}
+\titlespacing{\chapter}{0pt}{-20pt}{25pt}
+
+
+%目录样式  
+\CTEXsetup[name={第,章}, number={\arabic{chapter}}]{chapter} 
+ 
+
+%页眉页脚
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}  
+\renewcommand{\chaptermark}[1]{\markboth{第\thechapter 章\ ~~#1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection ~~#1}{}}
+\fancyhead[LO]{\leftmark}    %奇数页左侧章标题
+\fancyhead[RE]{\rightmark}  %偶数页右侧节标题
+\fancyhead[RO,LE]{-\,\thepage\,-}   %奇数页右侧, 偶数页左侧是页码
+\renewcommand{\headrulewidth}{0pt} %无页眉线
+
+
+%在目录中加入参考文献，索引等，   nottoc 不显示目录本身
+\usepackage[nottoc]{tocbibind}
+
+\usepackage{microtype}  %让字体更好看
+\usepackage[colorlinks=false, pdfborder={0 0 0}]{hyperref}   %生成引用(图片/表格/公式)超链接
+
+%引入图片，子图宏包
+\usepackage{graphicx}
+\usepackage{subfigure}
+\setcounter{totalnumber}{2} %阻止 Latex将多于两个的浮动对象放置到同一页中
+\usepackage{float}   %用于控制浮动
+\usepackage[format=hang, font=small, textfont=it]{caption}
+\DeclareCaptionLabelSeparator{twospace}{\ ~}
+\captionsetup{labelsep=twospace}    %把图注序号与文本之间的冒号分隔符换成两个空格
+
+%直立积分号
+\usepackage{amsmath,amssymb}
+\DeclareSymbolFont{EulerExtension}{U}{euex}{m}{n}
+\DeclareMathSymbol{\euintop}{\mathop} {EulerExtension}{"52}
+\DeclareMathSymbol{\euointop}{\mathop} {EulerExtension}{"48}
+\let\intop\euintop
+\let\ointop\euointop
+
+%脚注样式
+\usepackage{pifont}
+\usepackage[perpage]{footmisc}  %每页脚注重新编号
+\renewcommand{\thefootnote}{\ding{\numexpr191+\value{footnote}}}
+
+%表格样式
+\usepackage{multicol} 
+\usepackage{multirow}
+\usepackage{ctexcap}   
+\usepackage{booktabs} 
+\usepackage{colortbl}
+\definecolor{tabcolor}{rgb}{.105,.410,.113}
+
+%定理样式
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{boiboites}  
+\usepackage{chngcntr}
+\newcounter{theoremcounter} 
+\counterwithin{theoremcounter}{chapter} 
+\newboxedtheorem[
+boxcolor=orange,background=blue!5,titlebackground=blue!20,titleboxcolor=black]
+{theo}{Theorem}{theoremcounter}
+
+
+%伪代码/算法
+\usepackage[vlined,ruled]{algorithm2e}
+
+
+%绘图设定
+%\usepackage{mathpazo}
+\usepackage{tikz} 
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.8}
+\usetikzlibrary{arrows,intersections} 
+% TikZ 设定
+\tikzset{thick, >=stealth', dot/.style={draw,fill=white,circle,inner sep=0pt,minimum size=4pt}}
+
+
+%流程图样式 
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows}
+ \tikzstyle{startstop} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!30]
+ \tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30]
+ \tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=orange!30]
+ \tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=green!30]
+ \tikzstyle{arrow} = [thick,->,>=stealth]
+
+%强调定义
+\newcommand{\Emph}{\textbf}
+
+%取消单词切断
+\tolerance=1
+\emergencystretch=\maxdimen
+\hyphenpenalty=10000
+\hbadness=10000
+
+
+%随机段落，用于示例
+\usepackage{lipsum}   

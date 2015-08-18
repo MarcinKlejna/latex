@@ -1,0 +1,107 @@
+ % !TEX TS-program = xelatexmk
+ \documentclass[UTF8,10pt, twoside]{article} 
+ \usepackage{ctexcap}   %中文支持 
+ %页面纸张设置
+ \usepackage{geometry}
+ \geometry{a4paper, papersize={210mm,297mm}, scale=0.8} %A4
+ \geometry{left=2cm,right=2cm,top=2cm,bottom=2cm}
+ 
+ % 设置中文段落首行缩进 
+ \usepackage{indentfirst}
+ \setlength{\parindent}{2em }  
+ \usepackage{titlesec}    
+ \titleformat{\section}{\LARGE\bfseries}{\thesection}{1em}{}
+ \usepackage{amsmath,amssymb}
+ \usepackage{bm}
+  
+ 
+ \begin{titlepage}
+ 	\title{逻辑回归及其并行化}
+ 	\author{宫庆义\\gongqingyi@qq.com} 
+ 	\date{\today}
+ \end{titlepage}
+ 
+ \begin{document} 
+ 	\pagestyle{empty}
+ 	\maketitle                         %生成标题  
+ 	\thispagestyle{empty}
+ 	\newpage
+   
+\section{简介}
+在计算广告学中， 通常使用逻辑回归(Logistic Regressions)来预估一个广告被点击的可能性，逻辑回归是对线性模型的一个归一化变换，其模型为：
+\begin{equation}
+z = p(y = 1|\bm{x}) = \frac{1}{1+e^{-\bm{w}\bm{x}}}
+\end{equation}
+这个模型的含义是，在给定一个广告的特征向量\(\bm{x}=(x_1,x_2,\ldots,x_n)\)的前提下，评估其被点击的可能性，这个模型也可以这样看待，对点击概率\(p\)，非点击概率\(1-p\)之比(几率)的对数 \(\ln\frac{p}{1-p} = \bm{w}\bm{x} \)进行线性回归,  经过整理后，即可得上述逻辑回归模型。
+
+
+\section{模型求解}
+\subsection{目标函数}
+对于这样一个模型，我们希望通过历史数据\(\bm{X}=(\bm{x}_1^T, \bm{x}_2^T, \ldots, \bm{x}_n^T)^T \)，\(\bm{y}=(y_1, y_2, \ldots, y_n)^T\) 求出模型的参数\(\bm{w}\)。这里通常采用极大似然估计的方法，首先写出似然函数：
+\begin{equation}
+L=\prod_{n=1}^{N}\Big[p(y_n=1|\bm{x}_n)\Big]^{y_n}\Big[1-p(y_n=1|\bm{x}_n)\Big]^{1-y_n}
+\end{equation}
+这个问题可以转化成
+\begin{equation}
+ \min\limits_{\bm{w}} J = -\ln L + \alpha \|\bm{w}\|_1 + \beta \|\bm{w}\|_2^2
+\end{equation}
+ 通常用梯度下降法(SGD)或者拟牛顿法(LBFGS)，求出使得\(J\)最小的最优化参数\(\bm{w}\)。这里\(\|\bm{w}\|_1\)，\(\|\bm{w}\|_2^2\)用来做模型选择和防止过拟合。
+ 
+\subsection{目标函数梯度}
+为了得到梯度，需要把目标函数\(J\)对参数\(\bm{w}\)求导:
+\begin{equation}
+\begin{aligned} 
+\frac{-\partial \ln L}{\partial \bm{w}} &= -\sum_{n=1}^{N}\Big[  y_n \cdot \frac{1}{z_n} \cdot \frac{\partial z_n}{\partial \bm{w}}  -  (1-y_n) \cdot \frac{1}{1-z_n}\cdot \frac{\partial z_n}{\partial \bm{w}}  \Big]\\
+&=\sum_{n=1}^N(z_n-y_n)\bm{x}_n
+\end{aligned} 
+\end{equation}
+
+\begin{equation}
+\frac{\partial \alpha \|\bm{w}\|_1}{ \partial w_i} = 
+\begin{cases}
+\begin{aligned} 
+\alpha \qquad  w_{i} &> 0  \cr 
+-\alpha \qquad  w_{i} &< 0  \cr 
+\alpha \qquad  w_{i} &= 0, \quad \frac{-\partial \ln L}{\partial w_{i}}<-\alpha \cr 
+-\alpha \qquad  w_{i} &= 0, \quad \frac{-\partial \ln L}{\partial w_{i}}>\alpha \cr
+0 \qquad       w_{i} &= 0, \quad -\alpha\leqslant\frac{-\partial \ln L}{\partial w_{i}}\leqslant\alpha
+\end{aligned}
+\end{cases}
+\end{equation}
+
+\begin{equation}
+\frac{\partial \beta \|\bm{w}\|_2^2}{ \partial \bm{w}} = 2 \beta \bm{w}
+\end{equation}
+
+\subsection{参数更新}
+\begin{equation}
+\bm{w}_{k+1} = \bm{w}_k - \eta \cdot \frac{\partial J}{\partial \bm{w}_k}
+\end{equation}
+  
+  
+\section{计算流程}
+在具体的计算中，需要多次迭代来求出最优的\(\bm{w}\)，每一次迭代主要分为两块，\(J\)的梯度计算，\(\bm{w}\)更新。数据的每一个样本\(\bm{x}\)是一个高维稀疏向量，样本是按行存放在不同机器节点上。假设有2台机器，各自存放了3条样本， 样本的维数是7维，第1台机器的3条样本为:
+\[x_1 =  (1,1,1,0,1,0,0) \]
+\[x_2 =  (0,0,1,1,0,0,0) \]
+\[x_3 =  (0,1,1,0,0,0,0) \]
+
+第2台机器的3条样本为:
+\[x_4 = (1,0,0,0,1,0,1) \]
+\[x_5 = (0,0,1,0,1,1,0) \]
+\[x_6 = (1,0,1,0,1,0,0) \]
+
+待求模型\(\bm{w}\)被切成2块(单机内存无法存放)，第1，2，3，4维放在第1台机器，第5，6，7维放在第2台机器。
+\newline\newline
+我们发现，第1台机器的样本第6，7维全是0， 第2台机器的样本，第2，4维全是0。那么最终\(\bm{w}\)第6，7维的值由第2台机器的样本\(x_4,x_5\)计算得到，\(\bm{w}\)第2，4维的值由第1台机器的样本\(x_1,x_2,x_3 \)计算得到，而\(\bm{w}\)其他维(第1，3，5维)的值，由两台机器上的其他样本\(x_1,x_2,x_3 x_4, x_5, x_6\)计算得到。这说明，两台机器可以各自进行梯度的计算，和\(\bm{w}\)的更新，但是对于\(\bm{w}\)的第1,3,5维的更新，其对应的梯度，需要求和两台机器的在每一轮迭代过程中的梯度(第1,3,5维)作为全局梯度，然后每台机器用这个求和了的梯度，去更新\(\bm{w}\)的第1,3,5维。
+\newline\newline
+所以，在计算过程中，第2台机器需要发送梯度的第1，3维给第1台机器进行汇总，第1台机器需要发送梯度的第5维给第2台机器进行汇总，然后第1台机器，用汇总的梯度去更新\(\bm{w}\)的第1，3维，第2台机器用汇总的梯度去更新\(\bm{w}\)的第5维梯度。
+\newline\newline
+因此，更新\(\bm{w}\)的第1，3，5维需要两台机器先互相通信梯度数据，更新\(\bm{w}\)的第2，4维由第1台机器单独完成，更新\(\bm{w}\)的第6，7维，由第2台机器单独完成。
+\newline\newline
+如果样本数增多，特征维数增大，只需逐步往计算集群中添加机器，来分担梯度的计算，模型的更新，当然，集群中机器之间需要通信的数据量也会随之增大，在发送，接收数据的时候，还需要考虑网络传输的最优化，防止拥堵。
+
+\section{基于并行矩阵库Petsc}
+我们想只关注梯度的计算和\(\bm{w}\)的更新，即只负责代数计算的部分，而不去关注数据通信部分，另外梯度的计算，也希望用过矩阵库完成，
+例如\(-\ln L\)对\(\bm{w}\)的偏导，可以把所有样本当成一个矩阵\(X\)，这个偏导就是 \(X^T\left(\bm{z}-\bm{y}\right)\)，而无需通过遍历样本1到N进行计算求和。
+
+\end{document}
